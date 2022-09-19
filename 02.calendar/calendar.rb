@@ -16,7 +16,7 @@ def option_parse
 end
 
 
-def calendar(year:, month:)
+def calendar(year:Date.today.year, month:Date.today.month)
 
   firstday = Date.new(year, month, 1)#月の最初の日
   lastday = Date.new(year, month, -1) #月の最終日
