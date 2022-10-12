@@ -3,30 +3,25 @@
 MAXIMUM_COLUMN = 3
 
 def main
-  path = if ARGV.size >= 1
-           File.join(ARGV[0], '*')
-         else
-           '*'
-         end
+  path = ARGV.size >= 1 ? File.join(ARGV[0], '*') : '*'
   files = Dir.glob(path)
   total_files_count = files.size
   column_count = (total_files_count.to_f / MAXIMUM_COLUMN).ceil
-  columns = files.each_slice(column_count).to_a
+  file_table = files.each_slice(column_count).to_a
 
-  # 配列ごとの最後に何もなかった場合'nil'を入れる
-  if columns.size >= MAXIMUM_COLUMN && total_files_count % MAXIMUM_COLUMN != 0
-    (MAXIMUM_COLUMN - total_files_count % MAXIMUM_COLUMN).to_i.times do
-      columns[-1] << nil
+  if file_table.size >= MAXIMUM_COLUMN && total_files_count % MAXIMUM_COLUMN != 0
+    (MAXIMUM_COLUMN - total_files_count % MAXIMUM_COLUMN).times do
+      file_table[-1] << ''
     end
   end
-  show_files(columns)
+  show_files(file_table)
 end
 
-def show_files(columns)
-  longest_name = columns.flatten.max_by(&:size)
-  columns.transpose.each do |file_tables|
-    file_tables.each do |file_table|
-      print File.basename(file_table.to_s).ljust(longest_name.size)
+def show_files(file_table)
+  longest_name = file_table.flatten.max_by(&:size).size
+  file_table.transpose.each do |file_paths|
+    file_paths.each do |file_path|
+      print File.basename(file_path).ljust(longest_name)
     end
     print "\n"
   end
