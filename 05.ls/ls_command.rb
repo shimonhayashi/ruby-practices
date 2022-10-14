@@ -3,8 +3,20 @@
 MAXIMUM_COLUMN = 3
 
 def main
-  path = ARGV.size >= 1 ? File.join(ARGV[0], '*') : '*'
-  files = Dir.glob(path)
+  files = if ARGV[0] == '-a'
+            path = ARGV.size >= 2 ? ARGV[1] : '.'
+            Dir.entries(path).sort
+          elsif ARGV[1] == '-a'
+            path = ARGV.size >= 2 ? ARGV[0] : '.'
+            Dir.entries(path).sort
+          else
+            path = ARGV.size >= 1 ? File.join(ARGV[0], '*') : '*'
+            Dir.glob(path)
+          end
+  filecount(files)
+end
+
+def filecount(files)
   total_files_count = files.size
   column_count = (total_files_count.to_f / MAXIMUM_COLUMN).ceil
   file_table = files.each_slice(column_count).to_a
@@ -18,10 +30,10 @@ def main
 end
 
 def show_files(file_table)
-  longest_name = file_table.flatten.max_by(&:size).size
+  column_width = file_table.flatten.max_by(&:size).size
   file_table.transpose.each do |file_paths|
     file_paths.each do |file_path|
-      print File.basename(file_path).ljust(longest_name)
+      print File.basename(file_path).ljust(column_width)
     end
     print "\n"
   end
