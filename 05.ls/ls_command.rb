@@ -1,22 +1,23 @@
 # frozen_string_literal: true
 
+require 'optparse'
+
 MAXIMUM_COLUMN = 3
 
 def main
-  files = if ARGV[0] == '-a'
-            path = ARGV.size >= 2 ? ARGV[1] : '.'
-            Dir.entries(path).sort
-          elsif ARGV[1] == '-a'
-            path = ARGV.size >= 2 ? ARGV[0] : '.'
-            Dir.entries(path).sort
+  params = ARGV.getopts('a')
+  files = if params['a'] && ARGV[0]
+            Dir.entries(ARGV[0]).sort
+          elsif params['a']
+            Dir.entries('.').sort
           else
             path = ARGV.size >= 1 ? File.join(ARGV[0], '*') : '*'
             Dir.glob(path)
           end
-  filecount(files)
+  count_file(files)
 end
 
-def filecount(files)
+def count_file(files)
   total_files_count = files.size
   column_count = (total_files_count.to_f / MAXIMUM_COLUMN).ceil
   file_table = files.each_slice(column_count).to_a
