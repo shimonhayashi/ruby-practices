@@ -17,7 +17,7 @@ def option_parse
   options
 end
 
-def calendar(year: Date.today.year, month: Date.today.month)
+def calendar(year:Date.today.year, month:Date.today.month)
   firstday = Date.new(year, month, 1) # 月の最初の日
   lastday = Date.new(year, month, -1) # 月の最終日
   dt = Date.today # 今日
@@ -25,7 +25,7 @@ def calendar(year: Date.today.year, month: Date.today.month)
 
   puts firstday.strftime('%m月 %Y').center(20) # 中央寄り
   puts '日 月 火 水 木 金 土'
-  print ' ' * 3 * first_wday # 最初日をスペース(3bytes)でずらす。putsは改行するため、改行しないprint
+  print ' ' * 3 * first_wday  # 最初日をスペース(3bytes)でずらす。putsは改行するため、改行しないprint
 
   (firstday..lastday).each do |date| # 1~最終日まで繰り返し
     if date == dt # 今日の日付だったら
@@ -40,4 +40,4 @@ def calendar(year: Date.today.year, month: Date.today.month)
   print "\n" if lastday.wday != 6 # 最終日が土曜日以外改行しないための処理
 end
 
-calendar(**option_parse) # **とすると定義にない引数を受け取れる
+calendar(**option_parse) # **とするとHashの引数を受け取ることができる。
