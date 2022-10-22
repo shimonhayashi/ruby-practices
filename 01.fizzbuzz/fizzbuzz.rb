@@ -1,13 +1,17 @@
-number = 0
-while number <= 20
-    number = number + 1
-    if number % 15 == 0
-        puts "FizzBuzz"
-    elsif number % 3 == 0
-        puts "Buzz"
-    elsif number % 5 == 0
-        puts "Fizz"
-    else
-        puts number
-    end
+# frozen_string_literal: true
+
+def fizzbuzz(number)
+  if (number % 15).zero?
+    puts 'FizzBuzz'
+  elsif (number % 3).zero?
+    puts 'Buzz'
+  elsif (number % 5).zero?
+    puts 'Fizz'
+  else
+    puts number
+  end
+end
+
+(1..20).each do |n|
+  fizzbuzz(n)
 end
