@@ -11,11 +11,14 @@ def main
 end
 
 def parse_files
-  params = ARGV.getopts('a')
+  params = ARGV.getopts('r')
   opt = OptionParser.new
   path = opt.parse(ARGV)[0]
-  a_flag = params['a'] ? File::FNM_DOTMATCH : 0
-  Dir.glob('*', a_flag, base: path).sort
+  if params['r']
+    Dir.glob('*', 0, base: path).sort.reverse
+  else
+    Dir.glob('*', 0, base: path).sort
+  end
 end
 
 def make_file_table(files)
