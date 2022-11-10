@@ -12,11 +12,11 @@ def main
   opt = OptionParser.new
   path = opt.parse(ARGV)[0] || '.'
   if params['l']
-    file_informations = []
+    file_data = []
     Dir.chdir(path) do
-      file_informations = l_option_file_information(path)
+      file_data = make_l_option_file(path)
     end
-    l_option_show(file_informations)
+    show_l_option(file_data)
   else
     files = Dir.glob('*', 0, base: path)
     file_table = make_file_table(files)
@@ -24,37 +24,44 @@ def main
   end
 end
 
-def l_option_file_information(path)
-  file_informations = []
-  Dir.glob('*').each do |filename|
+def make_l_option_file(_path)
+  file_data = []
+  Dir.glob('*').map do |filename|
     file_info = File.lstat(filename)
     permission = file_info.mode.to_s(8)[-3, 3].chars.map { |str| PERMISSION[str] }.join
-    link_to_file = " -> #{File.readlink("#{path}#{filename}")}" if file_info.symlink?
-    file_informations << {
-      blocks: file_info.blocks, file_type: FILE_TYPE[file_info.ftype],
-      permission: permission, nlink: file_info.nlink,
-      user_name: Etc.getpwuid(file_info.uid).name, group_name: Etc.getgrgid(file_info.gid).name,
-      size: file_info.size, date: file_info.mtime.strftime('%_m %e %H:%M'),
-      file_name: filename, link: link_to_file
+    link_to_file = " -> #{File.readlink(filename)}" if file_info.symlink?
+    file_data << {
+      blocks: file_info.blocks,
+      file_type: FILE_TYPE[file_info.ftype],
+      permission: permission,
+      nlink: file_info.nlink,
+      user_name: Etc.getpwuid(file_info.uid).name,
+      group_name: Etc.getgrgid(file_info.gid).name,
+      size: file_info.size,
+      date: file_info.mtime.strftime('%_m %e %H:%M'),
+      file_name: filename,
+      link: link_to_file
     }
   end
-  file_informations
+  file_data
 end
 
-def l_option_show(file_informations)
-  max_username_size = file_informations.max_by { |file_information| file_information[:user_name].size }[:user_name].size + 1
-  max_groupname_size = file_informations.max_by { |file_information| file_information[:group_name].size }[:group_name].size + 2
-  puts "total #{file_informations.sum { |file_information| file_information[:blocks] }}"
-  file_informations.each do |file_information|
-    print file_information[:file_type]
-    print file_information[:permission]
-    print format('%3d', file_information[:nlink])
-    print format("%#{max_username_size}s", file_information[:user_name])
-    print format("%#{max_groupname_size}s", file_information[:group_name])
-    print format('%6d', file_information[:size])
-    print " #{file_information[:date]}"
-    print " #{file_information[:file_name]}"
-    print file_information[:link]
+def show_l_option(file_data)
+  max_nlink_size = file_data.max_by { |file_datum| file_datum[:nlink].size }[:nlink].size - 5
+  max_username_size = file_data.max_by { |file_datum| file_datum[:user_name].size }[:user_name].size + 1
+  max_groupname_size = file_data.max_by { |file_datum| file_datum[:group_name].size }[:group_name].size + 2
+  max_size_size = file_data.max_by { |file_datum| file_datum[:size].size }[:size].size - 2
+  puts "total #{file_data.sum { |file_datum| file_datum[:blocks] }}"
+  file_data.each do |file_datum|
+    print file_datum[:file_type]
+    print file_datum[:permission].ljust(10)
+    print file_datum[:nlink].to_s.rjust(max_nlink_size)
+    print file_datum[:user_name].rjust(max_username_size)
+    print file_datum[:group_name].rjust(max_groupname_size)
+    print file_datum[:size].to_s.rjust(max_size_size)
+    print " #{file_datum[:date]}"
+    print " #{file_datum[:file_name]}"
+    print file_datum[:link]
     print "\n"
   end
 end
