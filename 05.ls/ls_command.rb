@@ -12,11 +12,10 @@ def main
   opt = OptionParser.new
   path = opt.parse(ARGV)[0] || '.'
   if params['l']
-    file_data = []
     Dir.chdir(path) do
-      file_data = make_l_option_file(path)
+      file_data = make_l_option_file
+      show_l_option(file_data)
     end
-    show_l_option(file_data)
   else
     files = Dir.glob('*', 0, base: path)
     file_table = make_file_table(files)
@@ -24,7 +23,7 @@ def main
   end
 end
 
-def make_l_option_file(_path)
+def make_l_option_file
   file_data = []
   Dir.glob('*').map do |filename|
     file_info = File.lstat(filename)
@@ -47,21 +46,21 @@ def make_l_option_file(_path)
 end
 
 def show_l_option(file_data)
-  max_nlink_size = file_data.max_by { |file_datum| file_datum[:nlink].size }[:nlink].size - 5
-  max_username_size = file_data.max_by { |file_datum| file_datum[:user_name].size }[:user_name].size + 1
-  max_groupname_size = file_data.max_by { |file_datum| file_datum[:group_name].size }[:group_name].size + 2
-  max_size_size = file_data.max_by { |file_datum| file_datum[:size].size }[:size].size - 2
-  puts "total #{file_data.sum { |file_datum| file_datum[:blocks] }}"
-  file_data.each do |file_datum|
-    print file_datum[:file_type]
-    print file_datum[:permission].ljust(10)
-    print file_datum[:nlink].to_s.rjust(max_nlink_size)
-    print file_datum[:user_name].rjust(max_username_size)
-    print file_datum[:group_name].rjust(max_groupname_size)
-    print file_datum[:size].to_s.rjust(max_size_size)
-    print " #{file_datum[:date]}"
-    print " #{file_datum[:file_name]}"
-    print file_datum[:link]
+  max_nlink_size = file_data.max_by { |file_data_list| file_data_list[:nlink].size }[:nlink].size
+  max_username_size = file_data.max_by { |file_data_list| file_data_list[:user_name].size }[:user_name].size + 1
+  max_groupname_size = file_data.max_by { |file_data_list| file_data_list[:group_name].size }[:group_name].size + 2
+  max_size_size = file_data.max_by { |file_data_list| file_data_list[:size].size }[:size].size
+  puts "total #{file_data.sum { |file_data_list| file_data_list[:blocks] }}"
+  file_data.each do |file_data_list|
+    print file_data_list[:file_type]
+    print file_data_list[:permission].ljust(10)
+    print file_data_list[:nlink].to_s.ljust(max_nlink_size)
+    print file_data_list[:user_name].ljust(max_username_size)
+    print file_data_list[:group_name].ljust(max_groupname_size)
+    print file_data_list[:size].to_s.ljust(max_size_size)
+    print " #{file_data_list[:date]}"
+    print " #{file_data_list[:file_name]}"
+    print file_data_list[:link]
     print "\n"
   end
 end
