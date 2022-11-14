@@ -24,12 +24,11 @@ def main
 end
 
 def make_l_option_file
-  file_data_list = []
   Dir.glob('*').map do |filename|
     file_info = File.lstat(filename)
     permission = file_info.mode.to_s(8)[-3, 3].chars.map { |str| PERMISSION[str] }.join
     link_to_file = " -> #{File.readlink(filename)}" if file_info.symlink?
-    file_data_list << {
+    {
       blocks: file_info.blocks,
       file_type: FILE_TYPE[file_info.ftype],
       permission: permission,
@@ -42,22 +41,21 @@ def make_l_option_file
       link: link_to_file
     }
   end
-  file_data_list
 end
 
 def show_l_option(file_data_list)
   max_nlink_size = file_data_list.max_by { |file_data| file_data[:nlink].size }[:nlink].size
-  max_username_size = file_data_list.max_by { |file_data| file_data[:user_name].size }[:user_name].size + 1
-  max_groupname_size = file_data_list.max_by { |file_data| file_data[:group_name].size }[:group_name].size + 2
+  max_username_size = file_data_list.max_by { |file_data| file_data[:user_name].size }[:user_name].size
+  max_groupname_size = file_data_list.max_by { |file_data| file_data[:group_name].size }[:group_name].size
   max_size_size = file_data_list.max_by { |file_data| file_data[:size].size }[:size].size
   puts "total #{file_data_list.sum { |file_data| file_data[:blocks] }}"
   file_data_list.each do |file_data|
     print file_data[:file_type]
     print file_data[:permission].ljust(10)
-    print file_data[:nlink].to_s.ljust(max_nlink_size)
-    print file_data[:user_name].ljust(max_username_size)
-    print file_data[:group_name].ljust(max_groupname_size)
-    print file_data[:size].to_s.rjust(max_size_size)
+    print "#{file_data[:nlink].to_s.rjust(max_nlink_size)} " # 数字は右寄せ
+    print "#{file_data[:user_name].ljust(max_username_size)}  "
+    print "#{file_data[:group_name].ljust(max_groupname_size)} "
+    print file_data[:size].to_s.rjust(max_size_size) # 数字は右寄せ
     print " #{file_data[:date]}"
     print " #{file_data[:file_name]}"
     print file_data[:link]
