@@ -8,23 +8,29 @@ FILE_TYPE = { 'fifo' => 'p', 'characterSpecial' => 'c', 'directory' => 'd', 'blo
 PERMISSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx', '4' => 'r--', '5' => 'r-x', '6' => 'rw-', '7' => 'rwx' }.freeze
 
 def main
-  params = ARGV.getopts('l')
+  params = {}
   opt = OptionParser.new
+  opt.on('-l') { |v| v }
+  opt.on('-a') { |v| v }
+  opt.on('-r') { |v| v }
+  opt.parse!(ARGV, into: params)
   path = opt.parse(ARGV)[0] || '.'
-  if params['l']
+  flags = params[:a] ? File::FNM_DOTMATCH : 0
+  files_bases = Dir.glob('*', flags, base: path)
+  files = files_bases.then { |file_bases| params[:r] ? file_bases.reverse : file_bases }
+  if params[:l]
     Dir.chdir(path) do
-      file_data_list = make_l_option_file
+      file_data_list = make_l_option_file(files)
       show_l_option(file_data_list)
     end
   else
-    files = Dir.glob('*', 0, base: path)
     file_table = make_file_table(files)
     show_files(file_table)
   end
 end
 
-def make_l_option_file
-  Dir.glob('*').map do |filename|
+def make_l_option_file(files)
+  files.map do |filename|
     file_info = File.lstat(filename)
     permission = file_info.mode.to_s(8)[-3, 3].chars.map { |str| PERMISSION[str] }.join
     link_to_file = " -> #{File.readlink(filename)}" if file_info.symlink?
