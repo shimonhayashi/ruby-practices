@@ -44,14 +44,14 @@ def make_l_option_file
 end
 
 def show_l_option(file_data_list)
-  max_nlink_size = file_data_list.max_by { |file_data| file_data[:nlink].to_s.size }[:nlink].to_s.size
-  max_username_size = file_data_list.max_by { |file_data| file_data[:user_name].size }[:user_name].size
-  max_groupname_size = file_data_list.max_by { |file_data| file_data[:group_name].size }[:group_name].size
-  max_size_size = file_data_list.max_by { |file_data| file_data[:size].to_s.size }[:size].to_s.size
+  max_nlink_size = file_data_list.map { |file_data| file_data[:nlink].to_s.size }.max
+  max_username_size = file_data_list.map { |file_data| file_data[:user_name].size }.max
+  max_groupname_size = file_data_list.map { |file_data| file_data[:group_name].size }.max
+  max_size_size = file_data_list.map { |file_data| file_data[:size].to_s.size }.max
   puts "total #{file_data_list.sum { |file_data| file_data[:blocks] }}"
   file_data_list.each do |file_data|
     print file_data[:file_type]
-    print file_data[:permission].ljust(10)
+    print "#{file_data[:permission]} "
     print "#{file_data[:nlink].to_s.rjust(max_nlink_size)} "
     print "#{file_data[:user_name].ljust(max_username_size)}  "
     print "#{file_data[:group_name].ljust(max_groupname_size)}  "
