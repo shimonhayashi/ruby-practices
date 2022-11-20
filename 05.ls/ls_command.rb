@@ -8,9 +8,9 @@ FILE_TYPE = { 'fifo' => 'p', 'characterSpecial' => 'c', 'directory' => 'd', 'blo
 PERMISSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx', '4' => 'r--', '5' => 'r-x', '6' => 'rw-', '7' => 'rwx' }.freeze
 
 def main
-  params = detect_parameter
-  files_bases = Dir.glob('*', params[:a] ? File::FNM_DOTMATCH : 0, base: OptionParser.new.parse(ARGV)[0] || '.')
-  files = files_bases.then { |file_bases| params[:r] ? file_bases.reverse : file_bases }
+  params = detect_option
+  files_bases = make_a_option_file(params)
+  files = make_r_option_file(files_bases, params)
   if params[:l]
     Dir.chdir(OptionParser.new.parse(ARGV)[0] || '.') do
       file_data_list = make_l_option_file(files)
@@ -22,7 +22,7 @@ def main
   end
 end
 
-def detect_parameter
+def detect_option
   params = {}
   opt = OptionParser.new
   opt.on('-l') { |v| v }
@@ -30,6 +30,14 @@ def detect_parameter
   opt.on('-r') { |v| v }
   opt.parse!(ARGV, into: params)
   params
+end
+
+def make_a_option_file(params)
+  Dir.glob('*', params[:a] ? File::FNM_DOTMATCH : 0, base: OptionParser.new.parse(ARGV)[0] || '.')
+end
+
+def make_r_option_file(files_bases, params)
+  files_bases.then { |file_bases| params[:r] ? file_bases.reverse : file_bases }
 end
 
 def make_l_option_file(files)
