@@ -8,18 +8,11 @@ FILE_TYPE = { 'fifo' => 'p', 'characterSpecial' => 'c', 'directory' => 'd', 'blo
 PERMISSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx', '4' => 'r--', '5' => 'r-x', '6' => 'rw-', '7' => 'rwx' }.freeze
 
 def main
-  params = {}
-  opt = OptionParser.new
-  opt.on('-l') { |v| v }
-  opt.on('-a') { |v| v }
-  opt.on('-r') { |v| v }
-  opt.parse!(ARGV, into: params)
-  path = opt.parse(ARGV)[0] || '.'
-  flags = params[:a] ? File::FNM_DOTMATCH : 0
-  files_bases = Dir.glob('*', flags, base: path)
+  params = detect_parameter
+  files_bases = Dir.glob('*', params[:a] ? File::FNM_DOTMATCH : 0, base: OptionParser.new.parse(ARGV)[0] || '.')
   files = files_bases.then { |file_bases| params[:r] ? file_bases.reverse : file_bases }
   if params[:l]
-    Dir.chdir(path) do
+    Dir.chdir(OptionParser.new.parse(ARGV)[0] || '.') do
       file_data_list = make_l_option_file(files)
       show_l_option(file_data_list)
     end
@@ -27,6 +20,16 @@ def main
     file_table = make_file_table(files)
     show_files(file_table)
   end
+end
+
+def detect_parameter
+  params = {}
+  opt = OptionParser.new
+  opt.on('-l') { |v| v }
+  opt.on('-a') { |v| v }
+  opt.on('-r') { |v| v }
+  opt.parse!(ARGV, into: params)
+  params
 end
 
 def make_l_option_file(files)
