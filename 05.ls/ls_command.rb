@@ -8,13 +8,13 @@ FILE_TYPE = { 'fifo' => 'p', 'characterSpecial' => 'c', 'directory' => 'd', 'blo
 PERMISSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx', '4' => 'r--', '5' => 'r-x', '6' => 'rw-', '7' => 'rwx' }.freeze
 
 def main
-  params = detect_option
-  files_bases = make_a_option_file(params)
-  files = make_r_option_file(files_bases, params)
-  if params[:l]
-    Dir.chdir(OptionParser.new.parse(ARGV)[0] || '.') do
-      file_data_list = make_l_option_file(files)
-      show_l_option(file_data_list)
+  params = parse_params
+  dot_include_files = show_dot_file(params)
+  files = reverse_sort_order(dot_include_files, params)
+  if params['l']
+    Dir.chdir(params['argv'] || '.') do
+      file_data_list = make_detailed_file_info(files)
+      show_detailed_information(file_data_list)
     end
   else
     file_table = make_file_table(files)
@@ -22,25 +22,23 @@ def main
   end
 end
 
-def detect_option
-  params = {}
-  opt = OptionParser.new
-  opt.on('-l') { |v| v }
-  opt.on('-a') { |v| v }
-  opt.on('-r') { |v| v }
-  opt.parse!(ARGV, into: params)
+def parse_params
+  params = ARGV.getopts('arl')
+  params['argv'] = ARGV[0]
   params
 end
 
-def make_a_option_file(params)
-  Dir.glob('*', params[:a] ? File::FNM_DOTMATCH : 0, base: OptionParser.new.parse(ARGV)[0] || '.')
+def show_dot_file(params)
+  flags = params['a'] ? File::FNM_DOTMATCH : 0
+  path = params['argv'] || '.'
+  Dir.glob('*', flags, base: path)
 end
 
-def make_r_option_file(files_bases, params)
-  files_bases.then { |file_bases| params[:r] ? file_bases.reverse : file_bases }
+def reverse_sort_order(dot_include_files, params)
+  params['r'] ? dot_include_files.reverse : dot_include_files
 end
 
-def make_l_option_file(files)
+def make_detailed_file_info(files)
   files.map do |filename|
     file_info = File.lstat(filename)
     permission = file_info.mode.to_s(8)[-3, 3].chars.map { |str| PERMISSION[str] }.join
@@ -60,7 +58,7 @@ def make_l_option_file(files)
   end
 end
 
-def show_l_option(file_data_list)
+def show_detailed_information(file_data_list)
   max_nlink_size = file_data_list.map { |file_data| file_data[:nlink].to_s.size }.max
   max_username_size = file_data_list.map { |file_data| file_data[:user_name].size }.max
   max_groupname_size = file_data_list.map { |file_data| file_data[:group_name].size }.max
