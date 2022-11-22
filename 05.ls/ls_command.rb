@@ -9,10 +9,10 @@ PERMISSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx', '4' => 'r
 
 def main
   params = parse_params
-  dot_include_files = show_dot_file(params)
-  files = reverse_sort_order(dot_include_files, params)
-  if params['l']
-    Dir.chdir(params['argv'] || '.') do
+  gathered_files = show_dot_file(params)
+  files = sorted_files(gathered_files, params)
+  if params[:l]
+    Dir.chdir(params[:path] || '.') do
       file_data_list = make_detailed_file_info(files)
       show_detailed_information(file_data_list)
     end
@@ -23,19 +23,19 @@ def main
 end
 
 def parse_params
-  params = ARGV.getopts('arl')
-  params['argv'] = ARGV[0]
+  params = ARGV.getopts('arl').transform_keys(&:to_sym)
+  params[:path] = ARGV[0]
   params
 end
 
 def show_dot_file(params)
-  flags = params['a'] ? File::FNM_DOTMATCH : 0
-  path = params['argv'] || '.'
+  flags = params[:a] ? File::FNM_DOTMATCH : 0
+  path = params[:path] || '.'
   Dir.glob('*', flags, base: path)
 end
 
-def reverse_sort_order(dot_include_files, params)
-  params['r'] ? dot_include_files.reverse : dot_include_files
+def sorted_files(gathered_files, params)
+  params[:r] ? gathered_files.reverse : gathered_files
 end
 
 def make_detailed_file_info(files)
