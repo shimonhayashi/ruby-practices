@@ -9,15 +9,16 @@ PERMISSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx', '4' => 'r
 
 def main
   params = parse_params
-  gathered_files = show_dot_file(params)
-  files = sorted_files(gathered_files, params)
+  path = params[:path] || '.'
+  files = collect_files(params, path)
+  sorted_files = sort_files(files, params)
   if params[:l]
-    Dir.chdir(params[:path] || '.') do
-      file_data_list = make_detailed_file_info(files)
+    Dir.chdir(path) do
+      file_data_list = make_detailed_file_info(sorted_files)
       show_detailed_information(file_data_list)
     end
   else
-    file_table = make_file_table(files)
+    file_table = make_file_table(sorted_files)
     show_files(file_table)
   end
 end
@@ -28,18 +29,17 @@ def parse_params
   params
 end
 
-def show_dot_file(params)
+def collect_files(params, path)
   flags = params[:a] ? File::FNM_DOTMATCH : 0
-  path = params[:path] || '.'
   Dir.glob('*', flags, base: path)
 end
 
-def sorted_files(gathered_files, params)
-  params[:r] ? gathered_files.reverse : gathered_files
+def sort_files(files, params)
+  params[:r] ? files.reverse : files
 end
 
-def make_detailed_file_info(files)
-  files.map do |filename|
+def make_detailed_file_info(sorted_files)
+  sorted_files.map do |filename|
     file_info = File.lstat(filename)
     permission = file_info.mode.to_s(8)[-3, 3].chars.map { |str| PERMISSION[str] }.join
     link_to_file = " -> #{File.readlink(filename)}" if file_info.symlink?
@@ -78,9 +78,9 @@ def show_detailed_information(file_data_list)
   end
 end
 
-def make_file_table(files)
-  row_count = (files.size.to_f / MAXIMUM_COLUMN).ceil
-  files.each_slice(row_count).to_a.map do |file_paths|
+def make_file_table(sorted_files)
+  row_count = (sorted_files.size.to_f / MAXIMUM_COLUMN).ceil
+  sorted_files.each_slice(row_count).to_a.map do |file_paths|
     file_paths.fill('', file_paths.size, row_count - file_paths.size)
   end
 end
