@@ -9,11 +9,10 @@ PERMISSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx', '4' => 'r
 
 def main
   params = parse_params
-  path = params[:path] || '.'
-  files = collect_files(params, path)
+  files = collect_files(params)
   sorted_files = sort_files(files, params)
   if params[:l]
-    Dir.chdir(path) do
+    Dir.chdir(params[:path]) do
       file_data_list = make_detailed_file_info(sorted_files)
       show_detailed_information(file_data_list)
     end
@@ -25,21 +24,21 @@ end
 
 def parse_params
   params = ARGV.getopts('arl').transform_keys(&:to_sym)
-  params[:path] = ARGV[0]
+  params[:path] = ARGV[0] || '.'
   params
 end
 
-def collect_files(params, path)
+def collect_files(params)
   flags = params[:a] ? File::FNM_DOTMATCH : 0
-  Dir.glob('*', flags, base: path)
+  Dir.glob('*', flags, base: params[:path])
 end
 
 def sort_files(files, params)
   params[:r] ? files.reverse : files
 end
 
-def make_detailed_file_info(sorted_files)
-  sorted_files.map do |filename|
+def make_detailed_file_info(files)
+  files.map do |filename|
     file_info = File.lstat(filename)
     permission = file_info.mode.to_s(8)[-3, 3].chars.map { |str| PERMISSION[str] }.join
     link_to_file = " -> #{File.readlink(filename)}" if file_info.symlink?
@@ -78,9 +77,9 @@ def show_detailed_information(file_data_list)
   end
 end
 
-def make_file_table(sorted_files)
-  row_count = (sorted_files.size.to_f / MAXIMUM_COLUMN).ceil
-  sorted_files.each_slice(row_count).to_a.map do |file_paths|
+def make_file_table(files)
+  row_count = (files.size.to_f / MAXIMUM_COLUMN).ceil
+  files.each_slice(row_count).to_a.map do |file_paths|
     file_paths.fill('', file_paths.size, row_count - file_paths.size)
   end
 end
