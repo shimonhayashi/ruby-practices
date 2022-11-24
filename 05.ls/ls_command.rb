@@ -8,23 +8,37 @@ FILE_TYPE = { 'fifo' => 'p', 'characterSpecial' => 'c', 'directory' => 'd', 'blo
 PERMISSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx', '4' => 'r--', '5' => 'r-x', '6' => 'rw-', '7' => 'rwx' }.freeze
 
 def main
-  params = ARGV.getopts('l')
-  opt = OptionParser.new
-  path = opt.parse(ARGV)[0] || '.'
-  if params['l']
-    Dir.chdir(path) do
-      file_data_list = make_l_option_file
-      show_l_option(file_data_list)
+  params = parse_params
+  files = collect_files(params)
+  sorted_files = sort_files(files, params)
+  if params[:l]
+    Dir.chdir(params[:path]) do
+      file_data_list = make_detailed_file_info(sorted_files)
+      show_detailed_information(file_data_list)
     end
   else
-    files = Dir.glob('*', 0, base: path)
-    file_table = make_file_table(files)
+    file_table = make_file_table(sorted_files)
     show_files(file_table)
   end
 end
 
-def make_l_option_file
-  Dir.glob('*').map do |filename|
+def parse_params
+  params = ARGV.getopts('arl').transform_keys(&:to_sym)
+  params[:path] = ARGV[0] || '.'
+  params
+end
+
+def collect_files(params)
+  flags = params[:a] ? File::FNM_DOTMATCH : 0
+  Dir.glob('*', flags, base: params[:path])
+end
+
+def sort_files(files, params)
+  params[:r] ? files.reverse : files
+end
+
+def make_detailed_file_info(files)
+  files.map do |filename|
     file_info = File.lstat(filename)
     permission = file_info.mode.to_s(8)[-3, 3].chars.map { |str| PERMISSION[str] }.join
     link_to_file = " -> #{File.readlink(filename)}" if file_info.symlink?
@@ -43,7 +57,7 @@ def make_l_option_file
   end
 end
 
-def show_l_option(file_data_list)
+def show_detailed_information(file_data_list)
   max_nlink_size = file_data_list.map { |file_data| file_data[:nlink].to_s.size }.max
   max_username_size = file_data_list.map { |file_data| file_data[:user_name].size }.max
   max_groupname_size = file_data_list.map { |file_data| file_data[:group_name].size }.max
