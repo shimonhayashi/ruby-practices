@@ -7,9 +7,9 @@ def main
   files = ARGV
   texts = files.empty? ? [$stdin.read] : files.map { |file| File.read(file) }
   number_lists = word_count(texts, params)
-  number = make_list(files, number_lists)
-  number_with_files = add_filename(files, number)
-  show_list(number_with_files)
+  number_lists_with_space = add_space(number_lists)
+  number_lists_with_filename = add_filename(files, number_lists_with_space)
+  show(files, number_lists_with_filename)
 end
 
 def word_count(texts, params)
@@ -38,28 +38,31 @@ end
 
 def calculate_total(number_lists)
   total_numbers = number_lists.transpose.map(&:sum)
-  number_lists << total_numbers
+  number_lists.push(total_numbers)
 end
 
-def make_list(files, number_lists)
-  lines = number_lists.map do |number_list|
+def add_space(number_lists)
+  number_lists.map do |number_list|
     number_list.map do |number|
       number.to_s.rjust(8)
     end
   end
-  files.empty? ? add_filename(files, lines) : lines
 end
 
-def add_filename(files, number)
-  files.each_with_index do |file, i|
-    number[i] << " #{file}"
+def add_filename(files, number_lists_with_space)
+  number_lists_with_space.each_with_index do |number_list_with_space, i|
+    number_list_with_space.push(" #{files[i]}")
   end
-  number.last << ' total' if files.size > 1
-  number
 end
 
-def show_list(number_with_files)
-  number_with_files.each { |number_with_file| puts number_with_file.join }
+def show(files, number_lists_with_filename)
+  number_lists_with_filename.each_with_index do |number_list_with_filename, i|
+    if files.size > 1 && i == number_lists_with_filename.size - 1
+      puts "#{number_list_with_filename.join} total"
+    else
+      puts number_list_with_filename.join
+    end
+  end
 end
 
 main
