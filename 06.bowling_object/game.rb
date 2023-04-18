@@ -4,31 +4,29 @@ require_relative 'frame'
 
 class Game
   def initialize(shots)
-    @shots = shots
-    create_frames
+    create_frames(shots)
   end
 
   def score
     total_score = 0
     @frames.each_with_index do |frame, index|
-      frame_score = frame.score
-      frame_score += bonus_points(frame, index) if index < 9 && (frame.strike? || frame.spare?)
-      total_score += frame_score
+      total_score += frame.score
+      total_score += bonus_points(frame, index) if index < 9 && (frame.strike? || frame.spare?)
     end
     total_score
   end
 
-  def create_frames
+  def create_frames(shots)
     @frames = []
     frame_marks = []
-    @shots.each do |shot|
+    shots.each do |shot|
       frame_marks << shot
       if @frames.size < 9 && (frame_marks.size >= 2 || shot == 'X')
         @frames << Frame.new(frame_marks)
         frame_marks = []
       end
     end
-    @frames << Frame.new(frame_marks) if @frames.size == 9
+    @frames << Frame.new(frame_marks)
   end
 
   def bonus_points(frame, index)
